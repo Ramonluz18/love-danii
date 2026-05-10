@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Para a Minha Futura</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Great+Vibes&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/BloomPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: 'Montserrat', sans-serif;
+      background: #f4ecff;
+      color: #2b1b3a;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top left, rgba(184, 154, 255, 0.35), transparent 35%),
+                  radial-gradient(circle at bottom right, rgba(255, 178, 217, 0.35), transparent 30%),
+                  #f4ecff;
+    }
+    .page-wrap {
+      overflow: hidden;
+    }
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+    .hero__overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(203, 143, 255, 0.15));
+      pointer-events: none;
+    }
+    .hero__content {
+      position: relative;
+      max-width: 760px;
+      z-index: 1;
+    }
+    .hero__eyebrow {
+      margin: 0 0 1rem;
+      display: inline-block;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      font-size: 0.82rem;
+      color: #5d3b7d;
+    }
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(2.6rem, 4vw, 4.6rem);
+      line-height: 0.95;
+      letter-spacing: -0.06em;
+      font-weight: 800;
+      color: #2a143f;
+      text-shadow: 0 0 10px rgba(255, 107, 163, 0.5), 0 0 20px rgba(255, 107, 163, 0.3), 0 0 30px rgba(255, 107, 163, 0.2);
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+    .hero__text {
+      margin: 1.5rem auto 2.5rem;
+      font-size: 1.1rem;
+      line-height: 1.85;
+      max-width: 640px;
+      color: #5b466f;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem 2rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #a164ff, #ff6ba3);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      box-shadow: 0 18px 45px rgba(161, 100, 255, 0.25);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 50px rgba(161, 100, 255, 0.3);
+    }
+    .btn-love {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem 2rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #ff6ba3, #ff1493);
+      color: #fff;
+      border: none;
+      font-weight: 700;
+      box-shadow: 0 18px 45px rgba(255, 107, 163, 0.25);
+      transition: transform 0.25s ease, box-shadow 0.25s ease, text-shadow 0.25s ease;
+      cursor: pointer;
+      margin-top: 1rem;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+    .btn-love:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 22px 50px rgba(255, 107, 163, 0.3);
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+    }
+    .hero__floating-hearts {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .hero__floating-hearts span {
+      position: absolute;
+      font-size: 1.8rem;
+      opacity: 0.85;
+      animation: floatHeart 12s ease-in-out infinite;
+      transform-style: preserve-3d;
+      cursor: pointer;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .hero__floating-hearts span:nth-child(1) { left: 12%; top: 72%; animation-delay: 0s; }
+    .hero__floating-hearts span:nth-child(2) { left: 84%; top: 40%; animation-delay: 2s; }
+    .hero__floating-hearts span:nth-child(3) { left: 45%; top: 18%; animation-delay: 4s; }
+    .hero__floating-hearts span:nth-child(4) { left: 72%; top: 78%; animation-delay: 6s; }
+    .hero__floating-hearts span:nth-child(5) { left: 28%; top: 32%; animation-delay: 8s; }
+    @keyframes floatHeart {
+      0%, 100% { transform: translateY(0) translateZ(0) scale(1) rotateX(0deg); opacity: 0.8; }
+      50% { transform: translateY(-32px) translateZ(20px) scale(1.15) rotateX(10deg); opacity: 1; }
+    }
+    .couple-3d {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      perspective: 1000px;
+      margin: 2rem auto 0;
+      z-index: 1;
+    }
+    .person {
+      position: absolute;
+      width: 50px;
+      height: 100px;
+      background: #ff6ba3;
+      border-radius: 25px 25px 10px 10px;
+      transform-style: preserve-3d;
+      animation: hug 4s ease-in-out infinite;
+    }
+    .person.man {
+      left: 20px;
+      background: #a164ff;
+      animation-delay: 0s;
+    }
+    .person.woman {
+      right: 20px;
+      background: #ff6ba3;
+      animation-delay: 0s;
+    }
+    @keyframes hug {
+      0%, 100% { transform: translateX(0) rotateY(0deg); }
+      50% { transform: translateX(20px) rotateY(15deg); }
+    }
+    .couple-3d.rotate {
+      transform: rotateY(180deg);
+    }
+    .crystal-3d {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px;
+      height: 100px;
+      perspective: 1000px;
+      z-index: 2;
+    }
+    .crystal-3d::before {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-left: 50px solid transparent;
+      border-right: 50px solid transparent;
+      border-bottom: 100px solid rgba(255, 107, 163, 0.8);
+      transform: rotateX(60deg) rotateY(0deg);
+      animation: spinCrystal 8s linear infinite;
+      box-shadow: 0 0 20px rgba(255, 107, 163, 0.5);
+    }
+    .crystal-3d::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-left: 50px solid transparent;
+      border-right: 50px solid transparent;
+      border-top: 100px solid rgba(161, 100, 255, 0.8);
+      transform: rotateX(-60deg) rotateY(0deg);
+      animation: spinCrystal 8s linear infinite reverse;
+      box-shadow: 0 0 20px rgba(161, 100, 255, 0.5);
+    }
+    @keyframes spinCrystal {
+      0% { transform: rotateX(60deg) rotateY(0deg); }
+      100% { transform: rotateX(60deg) rotateY(360deg); }
+    }
+    @keyframes glow {
+      0% { text-shadow: 0 0 10px rgba(255, 107, 163, 0.5), 0 0 20px rgba(255, 107, 163, 0.3), 0 0 30px rgba(255, 107, 163, 0.2); }
+      100% { text-shadow: 0 0 15px rgba(255, 107, 163, 0.7), 0 0 30px rgba(255, 107, 163, 0.5), 0 0 45px rgba(255, 107, 163, 0.3); }
+    }
+    .section {
+      padding: 6rem 1.5rem;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+    .section.intro {
+      padding-top: 4rem;
+    }
+    .section__headline {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    .section__headline span {
+      display: block;
+      font-weight: 700;
+      color: #8c64d6;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      margin-bottom: 1rem;
+    }
+    .section__headline h2 {
+      margin: 0;
+      font-size: clamp(2rem, 2.7vw, 3.2rem);
+      line-height: 1.05;
+    }
+    .cards {
+      display: grid;
+      gap: 1.75rem;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 30px;
+      padding: 2rem;
+      box-shadow: 0 24px 70px rgba(97, 48, 126, 0.09);
+      backdrop-filter: blur(16px);
+    }
+    .card h3 {
+      margin-top: 0;
+      font-size: 1.45rem;
+      color: #3f1f5f;
+    }
+    .card p {
+      margin: 1rem 0 0;
+      color: #5b4b73;
+      line-height: 1.8;
+    }
+    .story {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+    .story__image {
+      width: 1200px;
+      height: 1200px;
+      border-radius: 32px;
+      background: linear-gradient(180deg, #a76cff 0%, #ff8ed4 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .story__image::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle at top left, rgba(255,255,255,0.25), transparent 25%),
+                        radial-gradient(circle at bottom right, rgba(255,255,255,0.18), transparent 20%);
+    }
+    .story__content span {
+      display: inline-block;
+      color: #ad7cff;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 1rem;
+    }
+    .story__content h2 {
+      margin: 0 0 1.5rem;
+      font-size: clamp(2.2rem, 3vw, 3.2rem);
+      line-height: 1.05;
+    }
+    .story__content p {
+      margin: 0 0 2rem;
+      color: #4f3a68;
+      line-height: 1.85;
+    }
+    .story__content ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .story__content li {
+      margin-bottom: 1rem;
+      padding-left: 1.4rem;
+      color: #553871;
+      font-weight: 600;
+      position: relative;
+    }
+    .story__content li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: #d667b3;
+    }
+    .quote {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 173, 228, 0.14));
+      border-radius: 36px;
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+    blockquote {
+      margin: 0;
+      font-size: clamp(1.6rem, 2vw, 2.2rem);
+      line-height: 1.5;
+      color: #321b40;
+      font-family: 'Great Vibes', cursive;
+    }
+    blockquote span {
+      display: block;
+      margin-top: 1.6rem;
+      font-size: 1rem;
+      font-family: 'Montserrat', sans-serif;
+      color: #6f4c86;
+      letter-spacing: 0.05em;
+    }
+    .final {
+      background: #fff;
+      border-radius: 40px;
+      padding: 4rem 3rem;
+      box-shadow: 0 30px 80px rgba(105, 55, 135, 0.08);
+    }
+    .final h2 {
+      margin-top: 0;
+      font-size: clamp(2.2rem, 3vw, 3rem);
+      color: #321e4f;
+    }
+    .final p {
+      margin-top: 1.5rem;
+      color: #54436d;
+      line-height: 1.8;
+    }
+    @media (max-width: 900px) {
+      .story {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 680px) {
+      .hero {
+        padding: 3rem 1rem;
+      }
+      .story__image {
+        min-height: 320px;
+      }
+    }
+    .animated-message {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      color: #ff1493;
+      font-weight: 600;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      white-space: pre-line;
+    }
+    .animated-message.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .btn-sim {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.75rem 2rem;
+      background: linear-gradient(135deg, #ff1493, #ff69b4);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 1.1rem;
+      opacity: 0;
+      transform: scale(0);
+      transition: all 0.3s ease;
+    }
+    .btn-sim.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .btn-sim:hover {
+      transform: scale(1.1);
+      box-shadow: 0 10px 25px rgba(255, 107, 163, 0.4);
+    }
+    .hearts-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1000;
+    }
+    .heart-rise, .spark {
+      position: absolute;
+      animation: rise 3s ease-out forwards;
+    }
+    .spark {
+      animation: spark-burst 2s ease-out forwards;
+      opacity: 0.8;
+    }
+    @keyframes rise {
+      0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-100vh) rotateZ(360deg) scale(0);
+        opacity: 0;
+      }
+    }
+    @keyframes spark-burst {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--tx), var(--ty)) scale(0);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrap">
+    <canvas id="bg-canvas"></canvas>
+    <audio id="bg-music" src="music.mp3" loop muted></audio>
+    <header class="hero">
+      <div class="hero__overlay"></div>
+      <div class="hero__content">
+        <p class="hero__eyebrow">Para a pessoa mais especial</p>
+        <h1>Meu amor por você é uma declaração eterna Thuthuca.</h1>
+        <p class="hero__text">Cada palavra aqui foi pensada para mostrar que você é minha inspiração, meu porto seguro e meu sorriso constante.</p>
+        <a href="#declaracoes" class="btn">Ler minhas declaraçõe de Princesa</a>
+        <button class="btn-love">Te Amo</button>
+        <div id="message" class="animated-message"></div>
+        <button class="btn-sim" id="btn-sim" style="display:none;">SIM</button>
+      </div>
+      <div class="couple-3d">
+        <div class="person man"></div>
+        <div class="person woman"></div>
+      </div>
+      <div class="crystal-3d"></div>
+      <div class="hero__floating-hearts">
+        <span>❤</span><span>❤</span><span>❤</span><span>❤</span><span>❤</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="section intro" id="declaracoes">
+        <div class="section__headline">
+          <span>Declarações</span>
+          <h2>Sou grato por cada momento ao seu lado.</h2>
+        </div>
+        <div class="cards">
+          <article class="card">
+            <h3>Você é meu universo</h3>
+            <p>Quando penso em tudo o que é belo, sinto que você reúne luz, sonhos e carinho. No seu abraço, encontro o calor do meu lugar favorito.</p>
+          </article>
+          <article class="card">
+            <h3>Seu sorriso transforma</h3>
+            <p>O seu sorriso é minha certeza de que o mundo pode ser mais leve. A cada risada sua, meu coração se aquece e a alegria cresce sem avisar.</p>
+          </article>
+          <article class="card">
+            <h3>Eu escolho você todos os dias</h3>
+            <p>Nem sempre é fácil, mas a escolha de te amar é natural e constante. Você merece paciência, cuidado e todas as minhas melhores versões.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section story">
+        <div class="story__image">
+          <img src="foto.jpg" alt="Nossa história">
+        </div>
+        <div class="story__content">
+          <span>Minha promessa</span>
+          <h2>Cada capítulo da nossa história será escrito com dedicação.</h2>
+          <p>Não quero apenas ser lembrado como um amor romântico; quero ser sua companhia fiel, seu apoio incondicional e o sorriso que aparece quando tudo parece difícil.</p>
+          <ul>
+            <li>Prometo ouvir com atenção.</li>
+            <li>Prometo celebrar seus sonhos como se fossem os meus.</li>
+            <li>Prometo cuidar do que temos com carinho e respeito.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section quote">
+        <blockquote>
+          "Amar você é ter certeza de que a vida se transforma em poesia quando estamos juntos."<span>— Seu amor</span>
+        </blockquote>
+      </section>
+
+      <section class="section final">
+        <div>
+          <h2>Meu coração é seu.</h2>
+          <p>Obrigado por existir na minha vida e por fazer dos nossos dias um lugar mais bonito. Quero continuar te surpreendendo com gestos verdadeiros e carinho sem medidas.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div id="hearts-container" class="hearts-container"></div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const links = document.querySelectorAll('a[href^="#"]');
+      links.forEach(link => {
+        link.addEventListener('click', function (event) {
+          const target = document.querySelector(this.getAttribute('href'));
+          if (target) {
+            event.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+      // Teste botão
+      const btnLove = document.querySelector('.btn-love');
+      const messageDiv = document.getElementById('message');
+      let isAnimating = false;
+
+      function typeWriter(text, element, speed = 30, callback) {
+        element.textContent = '';
+        element.classList.add('show');
+        let i = 0;
+        const timer = setInterval(() => {
+          if (i < text.length) {
+            element.textContent += text.charAt(i);
+            i++;
+          } else {
+            clearInterval(timer);
+            if (callback) callback();
+          }
+        }, speed);
+      }
+
+      if (btnLove) {
+        btnLove.addEventListener('click', function () {
+          if (isAnimating) return;
+          isAnimating = true;
+          // Feedback visual no botão
+          btnLove.textContent = 'Amo Você Também!';
+          btnLove.style.background = 'linear-gradient(135deg, #ff1493, #ff69b4)';
+          setTimeout(() => {
+            btnLove.textContent = 'Te Amo';
+            btnLove.style.background = 'linear-gradient(135deg, #ff6ba3, #ff1493)';
+          }, 3000);
+
+          // Animação de texto
+          const text = 'Também te amo,\nse você deixar eu te farei feliz\ne te farei esquecer tudo de ruim que você passou';
+          typeWriter(text, messageDiv, 30, function() {
+            // Mostrar botão SIM após a mensagem terminar
+            btnSim.style.display = 'inline-block';
+            setTimeout(() => {
+              btnSim.classList.add('show');
+            }, 100);
+          });
+          setTimeout(() => { isAnimating = false; }, 3000); // Reset after button
+        });
+      }
+
+      // Ativar áudio ao primeiro clique do usuário
+      const audio = document.getElementById('bg-music');
+      let audioStarted = false;
+      
+      function startAudio() {
+        if (!audioStarted && audio) {
+          audio.muted = false;
+          audio.play().catch(err => console.log('Áudio não pode tocar:', err));
+          audioStarted = true;
+          document.removeEventListener('click', startAudio);
+        }
+      }
+      
+      document.addEventListener('click', startAudio);
+
+      // Botão SIM com corações e fogos
+      const btnSim = document.getElementById('btn-sim');
+      const heartsContainer = document.getElementById('hearts-container');
+
+      function createHearts() {
+        for (let i = 0; i < 30; i++) {
+          const heart = document.createElement('div');
+          heart.textContent = '❤';
+          heart.className = 'heart-rise';
+          heart.style.left = Math.random() * 100 + '%';
+          heart.style.fontSize = Math.random() * 20 + 20 + 'px';
+          heart.style.color = ['#ff1493', '#ff69b4', '#ff6ba3', '#ff1493'][Math.floor(Math.random() * 4)];
+          heart.style.animationDelay = Math.random() * 0.5 + 's';
+          heartsContainer.appendChild(heart);
+        }
+      }
+
+      function createSparks() {
+        for (let i = 0; i < 50; i++) {
+          const spark = document.createElement('div');
+          spark.textContent = '✨';
+          spark.className = 'spark';
+          spark.style.left = Math.random() * 100 + '%';
+          spark.style.bottom = '0px';
+          spark.style.fontSize = Math.random() * 15 + 10 + 'px';
+          const angle = (Math.random() * Math.PI * 2);
+          const distance = Math.random() * 200 + 100;
+          spark.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+          spark.style.setProperty('--ty', -Math.random() * 300 - 100 + 'px');
+          spark.style.animationDelay = Math.random() * 0.3 + 's';
+          heartsContainer.appendChild(spark);
+        }
+      }
+
+      if (btnSim) {
+        btnSim.addEventListener('click', function () {
+          createHearts();
+          createSparks();
+          btnSim.style.display = 'none';
+          setTimeout(() => {
+            messageDiv.classList.remove('show');
+            btnSim.style.display = 'none';
+          }, 3000);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
